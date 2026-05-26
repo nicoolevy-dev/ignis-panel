@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ignis — Generador de Contenido</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #CC0000;
+    --black: #0A0A0A;
+    --white: #F5F4F0;
+    --grey: #1A1A1A;
+    --grey2: #2A2A2A;
+    --grey3: #3A3A3A;
+    --muted: #888;
+    --border: rgba(255,255,255,0.08);
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* HEADER */
+  header {
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--black);
+    z-index: 100;
+  }
+  .logo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+  .logo-text { font-family: var(--font-display); font-size: 22px; letter-spacing: 0.05em; color: var(--white); }
+  .logo-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
+  .logo-sub { font-size: 12px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 400; }
+
+  /* LAYOUT */
+  .layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 0;
+    flex: 1;
+    min-height: calc(100vh - 61px);
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    padding: 28px 24px;
+    overflow-y: auto;
+    background: var(--black);
+  }
+
+  /* MAIN */
+  .main {
+    padding: 28px 32px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* STEPS */
+  .steps {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .step {
+    height: 2px;
+    flex: 1;
+    border-radius: 99px;
+    background: var(--grey3);
+    transition: background 0.3s;
+  }
+  .step.done { background: var(--red); }
+  .step-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  /* FIELD */
+  .field-group { margin-bottom: 20px; }
+  .field-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .field-hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    line-height: 1.6;
+  }
+
+  /* PILLS */
+  .pill-group { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill {
+    padding: 5px 12px;
+    border-radius: 3px;
+    border: 1px solid var(--grey3);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    background: transparent;
+    transition: all 0.15s;
+    user-select: none;
+    font-family: var(--font-body);
+  }
+  .pill:hover { border-color: var(--red); color: var(--white); }
+  .pill.active { background: var(--red); border-color: var(--red); color: var(--white); }
+
+  /* RIESGO */
+  .riesgo-group { display: flex; gap: 6px; }
+  .riesgo-card {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--grey3);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: transparent;
+  }
+  .riesgo-card:hover { border-color: var(--grey); }
+  .riesgo-card.active { border-color: var(--red); background: rgba(204,0,0,0.08); }
+  .riesgo-card.active .rl { color: var(--red); }
+  .rdot { width: 7px; height: 7px; border-radius: 50%; margin-bottom: 6px; }
+  .d1 { background: #555; } .d2 { background: #EF9F27; } .d3 { background: var(--red); }
+  .rl { font-size: 11px; font-weight: 600; color: var(--muted); display: block; margin-bottom: 2px; font-family: var(--font-body); }
+  .rd { font-size: 10px; color: #555; line-height: 1.4; }
+
+  /* TEXTAREA */
+  textarea, input[type=text] {
+    width: 100%;
+    background: var(--grey);
+    border: 1px solid var(--grey3);
+    border-radius: 4px;
+    color: var(--white);
+    font-family: var(--font-body);
+    font-size: 13px;
+    padding: 10px 12px;
+    line-height: 1.6;
+    resize: vertical;
+    transition: border-color 0.15s;
+  }
+  textarea { min-height: 120px; }
+  textarea:focus, input[type=text]:focus { outline: none; border-color: var(--red); }
+  textarea::placeholder, input[type=text]::placeholder { color: #444; }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* BUTTONS */
+  .btn-red {
+    width: 100%;
+    padding: 12px;
+    background: var(--red);
+    color: var(--white);
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-body);
+    letter-spacing: 0.03em;
+    transition: opacity 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+  .btn-red:hover { opacity: 0.85; }
+  .btn-red:active { transform: scale(0.98); }
+  .btn-red:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+  .btn-ghost {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--grey3);
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all 0.15s;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+  .btn-ghost:hover { border-color: var(--muted); color: var(--white); }
+  .btn-outline {
+    width: 100%;
+    padding: 11px;
+    background: transparent;
+    color: var(--red);
+    border: 1px solid var(--red);
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all 0.15s;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+  .btn-outline:hover { background: var(--red); color: var(--white); }
+
+  /* ERR */
+  .err { font-size: 11px; color: var(--red); margin-top: 6px; display: none; }
+
+  /* SCREEN MAIN */
+  .main-screen { display: none; flex-direction: column; height: 100%; }
+  .main-screen.active { display: flex; }
+
+  /* CHAT AREA */
+  .chat-area {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 300px;
+    padding-right: 4px;
+  }
+  .chat-area::-webkit-scrollbar { width: 4px; }
+  .chat-area::-webkit-scrollbar-thumb { background: var(--grey3); border-radius: 2px; }
+
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 60px 20px;
+    text-align: center;
+  }
+  .empty-icon {
+    font-family: var(--font-display);
+    font-size: 64px;
+    color: var(--grey3);
+    letter-spacing: 0.05em;
+  }
+  .empty-title { font-size: 14px; color: var(--muted); }
+  .empty-hint { font-size: 12px; color: #444; max-width: 280px; line-height: 1.6; }
+
+  .msg {
+    padding: 14px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.7;
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  .msg-user {
+    background: var(--grey2);
+    border-left: 2px solid var(--red);
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .msg-user strong { color: var(--white); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-bottom: 4px; }
+  .msg-assistant {
+    background: var(--grey);
+    border-left: 2px solid var(--grey3);
+    white-space: pre-wrap;
+  }
+  .msg-assistant strong { color: var(--red); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-bottom: 6px; }
+  .msg-loading {
+    background: var(--grey);
+    border-left: 2px solid var(--grey3);
+    color: var(--muted);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid var(--grey3);
+    border-top-color: var(--red);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ARTE SCREEN */
+  .arte-header { margin-bottom: 20px; }
+  .arte-title { font-family: var(--font-display); font-size: 28px; letter-spacing: 0.04em; color: var(--white); margin-bottom: 4px; }
+  .arte-sub { font-size: 12px; color: var(--muted); }
+  .banner {
+    background: rgba(204,0,0,0.08);
+    border: 1px solid rgba(204,0,0,0.2);
+    border-radius: 4px;
+    padding: 12px 14px;
+    margin-bottom: 20px;
+  }
+  .banner-title { font-size: 11px; font-weight: 600; color: var(--red); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .banner-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .plat-section { margin-bottom: 20px; }
+  .plat-title { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .slide-block { border: 1px solid var(--grey3); border-radius: 4px; margin-bottom: 8px; overflow: hidden; }
+  .slide-head { background: var(--grey2); padding: 8px 12px; display: flex; align-items: center; gap: 10px; }
+  .slide-num-badge { width: 18px; height: 18px; border-radius: 50%; background: var(--red); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: var(--white); flex-shrink: 0; }
+  .slide-lbl { font-size: 12px; font-weight: 500; color: var(--white); }
+  .slide-spec-txt { font-size: 10px; color: var(--muted); }
+  .slide-body { padding: 10px 12px; }
+  .slide-body textarea { min-height: 50px; font-size: 12px; }
+
+  /* PROMPTS SCREEN */
+  .prompt-wrap { margin-bottom: 20px; }
+  .prompt-label { font-size: 10px; font-weight: 600; color: var(--red); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .prompt-box {
+    background: var(--grey);
+    border: 1px solid var(--grey3);
+    border-radius: 4px;
+    padding: 14px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 8px;
+  }
+  .copy-btn {
+    width: 100%;
+    padding: 9px;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--grey3);
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .copy-btn:hover { border-color: var(--red); color: var(--red); }
+  .copy-btn.copied { border-color: #1D9E75; color: #1D9E75; }
+
+  /* NAV BACK */
+  .nav-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: var(--font-body);
+    padding: 0;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    transition: color 0.15s;
+  }
+  .nav-back:hover { color: var(--white); }
+
+  /* API KEY */
+  .api-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    padding: 20px;
+  }
+  .api-box {
+    background: var(--grey);
+    border: 1px solid var(--grey3);
+    border-radius: 6px;
+    padding: 32px;
+    max-width: 420px;
+    width: 100%;
+  }
+  .api-title { font-family: var(--font-display); font-size: 28px; letter-spacing: 0.04em; margin-bottom: 6px; }
+  .api-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+  .api-input { margin-bottom: 12px; }
+
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<!-- API KEY OVERLAY -->
+<div class="api-overlay" id="api-overlay">
+  <div class="api-box">
+    <div class="api-title">IGNIS</div>
+    <div class="api-sub">Ingresá tu API key de Anthropic para usar el generador. Se guarda en tu navegador.</div>
+    <div class="api-input">
+      <input type="text" id="api-key-input" placeholder="sk-ant-..." style="font-family:monospace;font-size:12px;" />
+    </div>
+    <button class="btn-red" onclick="saveApiKey()">Guardar y continuar</button>
+    <div class="err" id="api-err" style="display:none;margin-top:8px;">Ingresá una API key válida.</div>
+  </div>
+</div>
+
+<header>
+  <div class="logo-dot"></div>
+  <div class="logo-text">IGNIS</div>
+  <div class="logo-sep"></div>
+  <div class="logo-sub">Generador de Contenido 2026</div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="steps" id="steps">
+      <div class="step done" id="step1"></div>
+      <div class="step" id="step2"></div>
+      <div class="step" id="step3"></div>
+    </div>
+    <div class="step-label" id="step-label">Paso 1 — Brief e ideas</div>
+
+    <div class="field-group">
+      <label class="field-label">Plataforma</label>
+      <div class="pill-group" id="g-plat">
+        <div class="pill active" data-val="Ambas (LI + IG)">Ambas</div>
+        <div class="pill" data-val="LinkedIn">LinkedIn</div>
+        <div class="pill" data-val="Instagram">Instagram</div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Visibilidad del cliente</label>
+      <div class="pill-group" id="g-cliente">
+        <div class="pill active" data-val="Nombrado">Nombrado</div>
+        <div class="pill" data-val="Por categoría">Por categoría</div>
+        <div class="pill" data-val="Sin referencia">Sin referencia</div>
+        <div class="pill" data-val="No aplica">No aplica</div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Nivel de riesgo narrativo</label>
+      <div class="riesgo-group" id="g-riesgo">
+        <div class="riesgo-card" data-val="Solo idea 1 (sólida)">
+          <div class="rdot d1"></div><span class="rl">Sólida</span><div class="rd">La que cumple</div>
+        </div>
+        <div class="riesgo-card active" data-val="Ideas 1 y 2 (sólida + creativa)">
+          <div class="rdot d2"></div><span class="rl">+ Creativa</span><div class="rd">Dos primeras</div>
+        </div>
+        <div class="riesgo-card" data-val="Las 3 ideas (sólida + creativa + jugada)">
+          <div class="rdot d3"></div><span class="rl">Las 3</span><div class="rd">Con la jugada</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="field-group">
+      <label class="field-label" for="brief">Brief</label>
+      <div class="field-hint">Indicá si es una campaña, efeméride, evento, algo del equipo o una tendencia.</div>
+      <textarea id="brief" placeholder='Ej: "Corrimos una campaña para McCain" / "Es el 25 de mayo" / "Fuimos al AMDIA"'></textarea>
+      <div class="err" id="brief-err">Contanos de qué se trata antes de continuar.</div>
+    </div>
+
+    <button class="btn-red" id="gen-btn" onclick="generarIdeas()">▸ Generar ideas</button>
+    <button class="btn-outline" onclick="goScreen('arte')">→ Ir a dirección de arte</button>
+    <button class="btn-ghost" onclick="clearChat()" style="margin-top:16px;font-size:11px;">✕ Limpiar conversación</button>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- CHAT SCREEN -->
+    <div class="main-screen active" id="screen-chat">
+      <div class="chat-area" id="chat-area">
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon">IGNIS</div>
+          <div class="empty-title">Estratega de contenido listo</div>
+          <div class="empty-hint">Completá el brief a la izquierda y generá las ideas. La conversación aparece acá.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ARTE SCREEN -->
+    <div class="main-screen" id="screen-arte">
+      <button class="nav-back" onclick="goScreen('chat')">← Volver al chat</button>
+      <div class="arte-header">
+        <div class="arte-title">DIRECCIÓN DE ARTE</div>
+        <div class="arte-sub">Pegá el copy aprobado por slide</div>
+      </div>
+      <div class="banner">
+        <div class="banner-title">Copy aprobado en el chat</div>
+        <div class="banner-text">Copiá el texto de cada slide de la conversación y pegalo acá. Los prompts para ChatGPT se generan con el texto real.</div>
+      </div>
+      <div id="slides-form"></div>
+      <button class="btn-red" onclick="goScreen('prompts')">✦ Generar prompt para ChatGPT</button>
+      <button class="btn-ghost" onclick="goScreen('chat')">← Volver al chat</button>
+    </div>
+
+    <!-- PROMPTS SCREEN -->
+    <div class="main-screen" id="screen-prompts">
+      <button class="nav-back" onclick="goScreen('arte')">← Volver a dirección de arte</button>
+      <div class="arte-header">
+        <div class="arte-title">PROMPT CHATGPT</div>
+        <div class="arte-sub">Copiá el prompt y pegalo en ChatGPT</div>
+      </div>
+      <div id="prompts-container"></div>
+      <button class="btn-ghost" onclick="resetAll()">+ Nuevo contenido</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const API_KEY = 'TU_API_KEY_ACA'; // Reemplazá con tu API key
+const MODEL = 'claude-sonnet-4-20250514';
+
+const SYSTEM_PROMPT = `Sos el estratega de contenido de IGNIS Media Agency para sus redes sociales (Instagram y LinkedIn). Tu función no es generar copies ni imágenes: es pensar ideas. El copy y el visual vienen después, y solo después de que la idea esté aprobada.
+
+Cada vez que recibís un input tu trabajo empieza por encontrar el insight que hace que la pieza valga la pena existir. El insight es una verdad humana o de industria que cuando se lee genera el "esto es exactamente así". Si no hay insight real, no hay pieza.
+
+Cuando el dueño del proyecto te proponga algo, intercambiá. Si un ángulo no te convence estratégicamente, decilo con argumento.
+
+REGLA DE ORO: El insight de Ignis siempre nace desde adentro — de lo que son, de lo que eligen, de cómo piensan. Nunca se construye en oposición a algo externo ni señalando a otros. No hay villanos, no hay crítica a la industria. La audacia de una idea se mide por la profundidad del insight, no por qué tan lejos va en compararse con otros.
+
+IGNIS: Agencia de medios independiente argentina con más de 20 años de historia. "No nos da lo mismo" es su cultura, no un claim. Valores: Pasión como motor, Excelencia como estándar, Autenticidad, Integridad, Compromiso. Agencia independiente N°1 de Argentina según RECMA 2025. NPS más alto del mercado.
+
+VOZ: Cercana y profesional. Directa. Sin grandilocuencia. Con punto de vista propio siempre. Nunca corporativa fría ni informal sin sustancia. Nunca crítica a la industria o competidores.
+
+PILARES: Anunciantes (prioridad), Servicios (prioridad), People, Tendencias, Trayectoria. Las efemérides no son un pilar — se anclan en el más afín.
+
+SISTEMA DE 3 IDEAS: Siempre proponer ideas antes de desarrollar. Niveles de profundidad del insight:
+1. La que cumple y funciona — insight claro, narrativa probada
+2. La creativa — un paso más en la profundidad del insight
+3. La jugada — el insight más profundo, más adentro. La audacia está en la profundidad, nunca en señalar afuera. Siempre con advertencia del riesgo.
+
+PROCESO: 1) Clasificar el input e identificar el pilar. 2) Preguntar UNA cosa si falta info clave. 3) Proponer ideas (solo insight/ángulo, sin copy). 4) Esperar elección. 5) Desarrollar la elegida. 6) Copy final solo después de aprobada la estructura.
+
+FILTRO FINAL: ¿Qué se lleva alguien que nos lee? ¿Esto podría haberlo publicado cualquier otra agencia? ¿Hay un insight o solo formato y copy? ¿Se siente que a alguien de Ignis le importó esto?`;
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+const state = {
+  plat: 'Ambas (LI + IG)',
+  cliente: 'Nombrado',
+  riesgo: 'Ideas 1 y 2 (sólida + creativa)',
+  messages: []
+};
+const storedPrompts = {};
+
+// ─── API KEY ──────────────────────────────────────────────────────────────────
+function initApiKey() {
+  const key = API_KEY.trim();
+  if(key && key !== 'TU_API_KEY_ACA') {
+    document.getElementById('api-overlay').style.display = 'none';
+    return;
+  }
+  const saved = localStorage.getItem('ignis_api_key');
+  if(saved) {
+    window._apiKey = saved;
+    document.getElementById('api-overlay').style.display = 'none';
+  }
+}
+function saveApiKey() {
+  const val = document.getElementById('api-key-input').value.trim();
+  if(!val || !val.startsWith('sk-')) {
+    document.getElementById('api-err').style.display = 'block';
+    return;
+  }
+  localStorage.setItem('ignis_api_key', val);
+  window._apiKey = val;
+  document.getElementById('api-overlay').style.display = 'none';
+}
+function getApiKey() {
+  const hardcoded = API_KEY.trim();
+  if(hardcoded && hardcoded !== 'TU_API_KEY_ACA') return hardcoded;
+  return window._apiKey || localStorage.getItem('ignis_api_key') || '';
+}
+
+// ─── GROUPS ───────────────────────────────────────────────────────────────────
+function setupGroup(id, key) {
+  document.getElementById(id).querySelectorAll('[data-val]').forEach(el => {
+    el.addEventListener('click', () => {
+      document.getElementById(id).querySelectorAll('[data-val]').forEach(e => e.classList.remove('active'));
+      el.classList.add('active');
+      state[key] = el.dataset.val;
+    });
+  });
+}
+setupGroup('g-plat','plat');
+setupGroup('g-cliente','cliente');
+setupGroup('g-riesgo','riesgo');
+
+// ─── SCREENS ──────────────────────────────────────────────────────────────────
+function goScreen(name) {
+  document.querySelectorAll('.main-screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  const labels = { chat: 'Paso 1 — Brief e ideas', arte: 'Paso 2 — Dirección de arte', prompts: 'Paso 3 — Prompt para ChatGPT' };
+  const steps = { chat: 1, arte: 2, prompts: 3 };
+  document.getElementById('step-label').textContent = labels[name];
+  [1,2,3].forEach(i => {
+    document.getElementById('step'+i).classList.toggle('done', i <= steps[name]);
+  });
+  if(name === 'arte') buildSlideForm();
+  if(name === 'prompts') buildPrompts();
+}
+
+// ─── CHAT ─────────────────────────────────────────────────────────────────────
+function addMsg(role, content) {
+  const area = document.getElementById('chat-area');
+  const empty = document.getElementById('empty-state');
+  if(empty) empty.style.display = 'none';
+  const div = document.createElement('div');
+  div.className = role === 'user' ? 'msg msg-user' : 'msg msg-assistant';
+  div.innerHTML = `<strong>${role === 'user' ? 'VOS' : 'IGNIS'}</strong>${content}`;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+  return div;
+}
+
+function addLoading() {
+  const area = document.getElementById('chat-area');
+  const div = document.createElement('div');
+  div.className = 'msg msg-loading';
+  div.id = 'msg-loading';
+  div.innerHTML = '<div class="spinner"></div> Pensando...';
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function removeLoading() {
+  const el = document.getElementById('msg-loading');
+  if(el) el.remove();
+}
+
+async function callClaude(userMsg) {
+  state.messages.push({ role: 'user', content: userMsg });
+  addLoading();
+  const key = getApiKey();
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 1500,
+        system: SYSTEM_PROMPT,
+        messages: state.messages
+      })
+    });
+    const data = await res.json();
+    removeLoading();
+    if(data.error) {
+      addMsg('assistant', `Error: ${data.error.message}`);
+      return;
+    }
+    const reply = data.content?.[0]?.text || '';
+    state.messages.push({ role: 'assistant', content: reply });
+    addMsg('assistant', reply);
+    document.getElementById('gen-btn').disabled = false;
+  } catch(e) {
+    removeLoading();
+    addMsg('assistant', 'Error de conexión. Revisá tu API key o la red.');
+    document.getElementById('gen-btn').disabled = false;
+  }
+}
+
+function generarIdeas() {
+  const brief = document.getElementById('brief').value.trim();
+  const errEl = document.getElementById('brief-err');
+  if(!brief){ errEl.style.display='block'; document.getElementById('brief').focus(); return; }
+  errEl.style.display='none';
+  const msg = `Nuevo input para generar ideas de contenido.\n\nPLATAFORMA: ${state.plat}\nVISIBILIDAD DEL CLIENTE: ${state.cliente}\nNIVEL DE RIESGO: ${state.riesgo}\n\nBRIEF:\n${brief}\n\nSeguí el proceso de trabajo: identificá el tipo de input y el pilar más afín, señalá si falta algo clave, y proponé las ideas según el nivel de riesgo. Solo los insights/ángulos por ahora, sin desarrollar copy.`;
+  document.getElementById('gen-btn').disabled = true;
+  goScreen('chat');
+  addMsg('user', brief);
+  callClaude(msg);
+}
+
+function clearChat() {
+  state.messages = [];
+  const area = document.getElementById('chat-area');
+  area.innerHTML = `<div class="empty-state" id="empty-state">
+    <div class="empty-icon">IGNIS</div>
+    <div class="empty-title">Estratega de contenido listo</div>
+    <div class="empty-hint">Completá el brief a la izquierda y generá las ideas.</div>
+  </div>`;
+  document.getElementById('gen-btn').disabled = false;
+}
+
+function resetAll() {
+  clearChat();
+  document.getElementById('brief').value = '';
+  goScreen('chat');
+}
+
+// ─── FOLLOW-UP ────────────────────────────────────────────────────────────────
+// Allow sending follow-up messages directly in chat
+document.addEventListener('keydown', function(e) {
+  if(e.key === 'Enter' && e.ctrlKey) {
+    const brief = document.getElementById('brief').value.trim();
+    if(brief && state.messages.length > 0) {
+      addMsg('user', brief);
+      callClaude(brief);
+      document.getElementById('brief').value = '';
+    }
+  }
+});
+
+// ─── SLIDES FORM ──────────────────────────────────────────────────────────────
+function getSlideConfig() {
+  const slides = [];
+  const plat = state.plat;
+  if(plat === 'LinkedIn' || plat === 'Ambas (LI + IG)') {
+    slides.push({ id:'li1', plat:'li', label:'Apertura', spec:'Primera línea. El gancho antes del "ver más".' });
+    slides.push({ id:'li2', plat:'li', label:'Desarrollo', spec:'Desafío → Decisión → Ejecución. Secciones con emoji.' });
+    slides.push({ id:'li3', plat:'li', label:'Cierre', spec:'Lectura final. Una afirmación, no un CTA.' });
+  }
+  if(plat === 'Instagram' || plat === 'Ambas (LI + IG)') {
+    slides.push({ id:'ig1', plat:'ig', label:'Slide 1', spec:'Headline bold. Máximo 6-8 palabras. Punto rojo al final.' });
+    slides.push({ id:'ig2', plat:'ig', label:'Slide 2', spec:'Una idea. Máximo 4 líneas.' });
+    slides.push({ id:'ig3', plat:'ig', label:'Slide 3', spec:'Continuación. Una idea concreta.' });
+    slides.push({ id:'ig4', plat:'ig', label:'Cierre', spec:'Declaración final de identidad.' });
+  }
+  return slides;
+}
+
+function buildSlideForm() {
+  const slides = getSlideConfig();
+  const form = document.getElementById('slides-form');
+  const existing = {};
+  slides.forEach(sl => {
+    const el = document.getElementById('copy-'+sl.id);
+    if(el) existing[sl.id] = el.value;
+  });
+  form.innerHTML = '';
+  const li = slides.filter(s => s.plat === 'li');
+  const ig = slides.filter(s => s.plat === 'ig');
+  if(li.length) {
+    const sec = document.createElement('div');
+    sec.className = 'plat-section';
+    sec.innerHTML = `<div class="plat-title">💼 LinkedIn</div>`;
+    li.forEach((sl,i) => sec.appendChild(makeBlock(sl, i+1, existing[sl.id])));
+    form.appendChild(sec);
+  }
+  if(ig.length) {
+    const sec = document.createElement('div');
+    sec.className = 'plat-section';
+    sec.innerHTML = `<div class="plat-title">📸 Instagram</div>`;
+    ig.forEach((sl,i) => sec.appendChild(makeBlock(sl, i+1, existing[sl.id])));
+    form.appendChild(sec);
+  }
+}
+
+function makeBlock(sl, num, saved) {
+  const block = document.createElement('div');
+  block.className = 'slide-block';
+  block.innerHTML = `<div class="slide-head">
+    <div class="slide-num-badge">${num}</div>
+    <div><div class="slide-lbl">${sl.label}</div><div class="slide-spec-txt">${sl.spec}</div></div>
+  </div>
+  <div class="slide-body">
+    <textarea id="copy-${sl.id}" placeholder="Pegá el copy aprobado...">${saved||''}</textarea>
+  </div>`;
+  return block;
+}
+
+// ─── PROMPTS ──────────────────────────────────────────────────────────────────
+function buildPrompts() {
+  const slides = getSlideConfig();
+  const igSlides = slides.filter(s => s.plat === 'ig');
+  const container = document.getElementById('prompts-container');
+  container.innerHTML = '';
+
+  if(!igSlides.length) {
+    container.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:14px;background:var(--grey);border-radius:4px;">Seleccionaste solo LinkedIn. Los prompts de imagen aplican a Instagram.</div>';
+    return;
+  }
+
+  const slideTexts = igSlides.map((sl, i) => {
+    const val = document.getElementById('copy-'+sl.id)?.value?.trim() || `[Slide ${i+1} — texto pendiente]`;
+    return `SLIDE ${i+1} — ${sl.label.toUpperCase()}\nTexto: "${val}"`;
+  }).join('\n\n');
+
+  const prompt = `Diseñá un carrusel de Instagram para Ignis Media Agency con ${igSlides.length} slides. El sistema visual es el siguiente:
+
+SISTEMA VISUAL IGNIS:
+— Fondo negro puro (#000000) en todos los slides
+— Tipografía: bold, sans-serif, moderna
+— Paleta: blanco (#FFFFFF) y rojo (#CC0000) sobre negro
+— Sin texturas, sin gradientes, sin efectos decorativos
+— Formato cuadrado 1:1 para cada slide
+— Composición limpia: solo tipografía y geometría
+
+SLIDES:
+
+${slideTexts}
+
+REGLAS DE COMPOSICIÓN:
+— Slide 1: tipografía muy grande y bold, ocupando 2/3 del espacio, alineada a la izquierda, punto rojo (•) al final como símbolo de convicción
+— Slides intermedios: tipografía mediana y bold, barra roja corta (20px ancho, 3px alto) sobre el texto como separador, alineado a la izquierda
+— Slide cierre: tipografía mediana bold, texto en rojo (#CC0000) para marcar el remate
+
+Sin logos. Sin fotografías. Solo tipografía y geometría limpia. Mostrá los ${igSlides.length} slides como un sistema visual coherente.`;
+
+  storedPrompts['ig'] = prompt;
+
+  const div = document.createElement('div');
+  div.className = 'prompt-wrap';
+  div.innerHTML = `<div class="prompt-label">📸 Instagram — Carrusel completo</div>
+  <div class="prompt-box">${prompt}</div>
+  <button class="copy-btn" id="cb-ig" onclick="copyPrompt('ig')">⎘ Copiar prompt</button>`;
+  container.appendChild(div);
+}
+
+function copyPrompt(key) {
+  const text = storedPrompts[key];
+  if(!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('cb-'+key);
+    btn.classList.add('copied');
+    btn.textContent = '✓ Copiado';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '⎘ Copiar prompt'; }, 2500);
+  });
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+initApiKey();
+</script>
+</body>
+</html>
